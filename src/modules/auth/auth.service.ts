@@ -6,6 +6,7 @@ import { UsersService } from '../../modules/users/users.service';
 import { LogInDto } from './dto/log-in.dto';
 import { comparePassword, encryptPassword } from 'src/utils/password-util';
 import { JwtService } from '@nestjs/jwt';
+import { CookieOptions } from 'csurf';
 
 @Injectable()
 export class AuthService {
@@ -17,31 +18,73 @@ export class AuthService {
     return await this.usersService.createUser(signUpDto)
   }
 
-  async logIn(loginDto: LogInDto) {
+  async logIn(loginDto: LogInDto, requestDomain: string) {
     const { email, password } = loginDto
     const user = await this.usersService.findUserByEmail(email)
     if(!await comparePassword(password, user.password))
       throw new BadRequestException('Password가 틀렸습니다.')
     
-    const { accessToken } = await this.setJwtAccessToken(email)
+    const { accessToken, accessOption } = await this.setJwtAccessToken(email, requestDomain)
+    const { refreshToken, refreshOption } = await this.setJwtRefreshToken(email, requestDomain)
     return {
       accessToken,
+      accessOption,
+      refreshToken,
+      refreshOption
     }
     
   }
 
   async setJwtAccessToken(
     email: string,
-    _expiresIn: string = '1h',
-    secret: string = 'secretKey',
+    requestDomain: string,
   ) {
     const payload = { sub: email }
+    const maxAge = 24 * 3600 * 1000
     const token = this.jwtService.sign(payload, {
-      secret: secret,
-      expiresIn : _expiresIn
+      secret: 'secretKey',
+      expiresIn : maxAge
     })
     return {
-      accessToken: token
+      accessToken: token,
+      accessOption: this.setCookieOption(maxAge, requestDomain)
+    }
+  }
+
+  async setJwtRefreshToken(email: string, requestDomain: string) {
+    const payload = { sub: email }
+    const maxAge = 15 * 24 * 60 * 1000
+    const token = this.jwtService.sign(payload, {
+      secret: 'refreshSecretKey',
+      expiresIn : maxAge,
+    })
+    return {
+      refreshToken: token,
+      refreshOption: this.setCookieOption(maxAge, requestDomain)
+    }
+  }
+
+  setCookieOption(maxAge: number, requestDomain: string):CookieOptions {
+    let domain: string
+
+    if(requestDomain.includes('127.0.0.1') || requestDomain.includes('localhost')){
+      domain = 'localhost'
+    } else {
+      domain = requestDomain
+    }
+    return {
+      domain,
+      path: '/',
+      httpOnly: true,
+      maxAge,
+      sameSite: 'lax'
+    }
+  }
+
+  expireJwtToken(requestDomain: string) {
+    return {
+      accessOption: this.setCookieOption(0, requestDomain),
+      refreshOption: this.setCookieOption(0, requestDomain)
     }
   }
 

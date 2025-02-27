@@ -6,6 +6,8 @@ import { AppService } from './app.service';
 import { AppDataSource } from './ormconfig';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
+import { PostsModule } from './modules/posts/posts.module';
+import { WinstonLoggerModule } from './modules/logger/winston-loggers.module';
 
 
 
@@ -18,6 +20,8 @@ import { UsersModule } from './modules/users/users.module';
     TypeOrmModule.forRoot(AppDataSource.options),
     UsersModule,
     AuthModule,
+    PostsModule,
+    WinstonLoggerModule,
   ],
   controllers: [AppController],
   providers: [AppService],

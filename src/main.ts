@@ -6,13 +6,16 @@ import { ClassSerializerInterceptor, ValidationPipe } from '@nestjs/common';
 // import { LocalAuthGuard } from './modules/auth/local-auth.guard';
 import * as csurf from 'csurf'
 import * as cookie from 'cookie-parser'
+import helmet from 'helmet';
+import { WinstonLoggersService } from './modules/logger/winston-loggers.service';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService)
+  const logger = new WinstonLoggersService()
 
   app.useGlobalPipes(new ValidationPipe({transform: true}));
-  app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)))
+  // app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)))
   // app.useGlobalGuards(new JwtAuthGuard());
   // app.useGlobalGuards(new LocalAuthGuard());
 
@@ -34,9 +37,17 @@ async function bootstrap() {
   };
   app.enableCors(corsOption)
   app.use(cookie())
-  app.use(csurf({ cookie: true }))
+  // app.use(csurf({ cookie: true }))
+  app.use(helmet())
+  app.setGlobalPrefix('/api/v1', {
+    exclude: ['health'],
+  })
+
+  app.useLogger(logger)
 
   const port = configService.get<number>('PORT') || 3000;
+  logger.log('Application is starting...')
   await app.listen(port);
+
 }
 bootstrap();

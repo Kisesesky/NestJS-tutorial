@@ -19,7 +19,7 @@ export class UsersService {
     return rest;
   }
 
-  async findUserByEmail(email): Promise<User> {
+  async findUserByEmail(email: string): Promise<User> {
     const user = await this.userRepository.findOne({where: { email } })
     if(!user) throw new UnauthorizedException('유저가 없습니다.');
     return user;
