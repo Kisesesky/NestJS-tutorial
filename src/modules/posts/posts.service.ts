@@ -4,6 +4,9 @@ import { Repository } from 'typeorm';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { Post } from './entities/post.entity';
+import { ListAllPostDto } from './dto/list-all-post.dto';
+import { ResponseListAllPostDto } from './dto/response-list-all-post.dto';
+import { paginate, Pagination } from 'nestjs-typeorm-paginate';
 
 @Injectable()
 export class PostsService {
@@ -16,10 +19,47 @@ export class PostsService {
     return await this.postRepository.save(post)
   }
 
-  async findAllPosts() {
-    return await this.postRepository.find({
-      relations: ['user']
-    }) ;
+  async findAllPosts(options: ListAllPostDto): Promise<Pagination<Post>> {
+    // const { page, limit } = listAllpostDto
+    // const [ data, total ] = await this.postRepository.findAndCount({
+    //   relations: ['user'],
+    //   take: limit,
+    //   skip: limit * (page-1)
+    // });
+
+    const query = this.postRepository
+      .createQueryBuilder('p')
+      .orderBy('p.createdAt', 'DESC')
+      .take(options.limit)
+      .skip(options.limit * (options.page -1))
+      .leftJoinAndSelect('p.user', 'user')
+      .select([
+        'p.id',
+        'p.title',
+        'p.content',
+        'p.createdAt',
+        'user.id',
+        'user.name'
+      ])
+    
+    if(options.title)
+      query.andWhere('p.title LIKE :title', { title: `%${options.title}%` })
+    
+    if(options.content)
+      query.andWhere('p.content LIKE :content', { content: `%${options.content}%` })
+
+    if(options.user)
+      query.andWhere('p.userId = :user', { user: options.user })
+
+    return paginate<Post>(query, options);
+
+    // return {
+    //   data,
+    //   total,
+    //   page,
+    //   limit,
+    //   totalPages: Math.ceil( total / limit )
+    // }
   }
 
   findOne(id: number) {

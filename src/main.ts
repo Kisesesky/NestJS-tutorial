@@ -8,6 +8,9 @@ import * as csurf from 'csurf'
 import * as cookie from 'cookie-parser'
 import helmet from 'helmet';
 import { WinstonLoggersService } from './modules/logger/winston-loggers.service';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger'
+import * as basicAuth from 'express-basic-auth'
+// import { LoggingMiddleware } from './common/middlewares/logger.middleware';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -19,6 +22,25 @@ async function bootstrap() {
   // app.useGlobalGuards(new JwtAuthGuard());
   // app.useGlobalGuards(new LocalAuthGuard());
 
+  app.use(
+    ['/docs'],
+    basicAuth({
+      users: { 'admin': 'password123' },
+      challenge: true,
+      unauthorizedResponse: () => 'Unauthorized'
+    })
+  )
+
+  const config = new DocumentBuilder()
+    .setTitle('nest tutorial api 문서')
+    .setDescription('For test API')
+    .setVersion('0.1')
+    .addBearerAuth()
+    .addBearerAuth({ type: 'http' }, 'admin')
+    .addServer('/api/v1')
+    .build();
+  const document = SwaggerModule.createDocument(app, config)
+  SwaggerModule.setup('docs', app, document)
   const corsOption = {
     allowHeaders: [
       'Accept',
@@ -35,6 +57,7 @@ async function bootstrap() {
     ],
     credential: true,
   };
+
   app.enableCors(corsOption)
   app.use(cookie())
   // app.use(csurf({ cookie: true }))
@@ -42,6 +65,7 @@ async function bootstrap() {
   app.setGlobalPrefix('/api/v1', {
     exclude: ['health'],
   })
+  // app.use(new LoggingMiddleware().use)
 
   app.useLogger(logger)
 

@@ -4,19 +4,25 @@ import { SignUpDto } from './dto/sign-up.dto';
 import { UpdateAuthDto } from './dto/update-auth.dto';
 import { LogInDto } from './dto/log-in.dto';
 import { Request, Response } from 'express';
-import { RequestOrigin } from 'src/decorators/origin.decorator';
+import { RequestOrigin } from '../../decorators/origin.decorator';
+import { ApiTags, ApiBody, ApiBearerAuth, ApiResponse } from '@nestjs/swagger'
+
 // import { LocalAuthGuard } from './local-auth.guard';
 
+@ApiTags('유저인증')
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   // @UseGuards(LocalAuthGuard)
+  @ApiBody({ type: SignUpDto })
   @Post('signup')
   signUp(@Body() signUpDto: SignUpDto) {
     return this.authService.signUp(signUpDto);
   }
   // @UseGuards(LocalAuthGuard)
+  // @ApiBearerAuth()
+  @ApiBody({ type: LogInDto })
   @Post('login')
   async login(@Body() loginDto: LogInDto, @Res() res:Response, @RequestOrigin() origin) {
     const { accessToken, accessOption, refreshToken, refreshOption } = await this.authService.logIn(loginDto, origin)
@@ -28,7 +34,7 @@ export class AuthController {
       refreshToken: refreshToken
     })
   }
-
+  @ApiBearerAuth()
   @Post('logout')
   logout(
     @Res() res: Response, @RequestOrigin() origin) {
@@ -65,4 +71,3 @@ export class AuthController {
     return this.authService.remove(+id);
   }
 }
-

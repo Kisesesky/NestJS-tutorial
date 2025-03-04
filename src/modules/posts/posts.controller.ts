@@ -1,17 +1,27 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, UnauthorizedException, Logger, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Logger, Query, UseInterceptors } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
-import { RequestUser } from 'src/decorators/request.decorator';
-import { User } from 'src/modules/users/entities/user.entity';
+import { RequestUser } from '../../decorators/request.decorator';
+import { User } from '../../modules/users/entities/user.entity';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { ApiTags, ApiBody, ApiBearerAuth, ApiResponse } from '@nestjs/swagger'
+import { ListAllPostDto } from './dto/list-all-post.dto';
+import { ResponseListAllPostDto } from './dto/response-list-all-post.dto';
+import { Pagination } from 'nestjs-typeorm-paginate';
+import { TransformInterceptor } from './../../common/interceptors/transform.interceptor';
 
+
+@ApiTags('포스트 관리')
+@ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 @Controller('posts')
+@UseInterceptors(TransformInterceptor)
 export class PostsController {
   logger = new Logger(Controller.name);
   constructor(private readonly postsService: PostsService) {}
 
+  @ApiBody({ type: CreatePostDto })
   @Post()
   async create(@Body() createPostDto: CreatePostDto, @RequestUser() user: User) {
     createPostDto.user = user
@@ -19,8 +29,8 @@ export class PostsController {
   }
 
   @Get()
-  async findAll() {
-    return await this.postsService.findAllPosts();
+  async findAll(@Query() listAllPostDto: ListAllPostDto) {
+    return await this.postsService.findAllPosts(listAllPostDto);
   }
 
   @Get(':id')

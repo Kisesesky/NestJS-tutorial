@@ -1,5 +1,5 @@
-import { User } from "src/modules/users/entities/user.entity";
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { User } from "../../users/entities/user.entity";
+import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()
 export class Post {
@@ -14,4 +14,7 @@ export class Post {
 
     @ManyToOne(()=>User, (user)=>user.posts)
     user: User
+
+    @CreateDateColumn()
+    createdAt: Date;
 }

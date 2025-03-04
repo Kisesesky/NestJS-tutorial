@@ -2,6 +2,7 @@ import { join } from "path";
 import { DataSource } from "typeorm";
 
 const entity = join(__dirname, '/**/*.entity{.ts,.js}')
+const migration = join(__dirname, './migrations/**/*{.ts,.js}'); 
 
 
 export const AppDataSource = new DataSource({
@@ -11,6 +12,7 @@ export const AppDataSource = new DataSource({
     username: 'postgres',
     password: `tjdgh1324!`,
     database: 'nest_test2',
-    synchronize: true,
+    // synchronize: true, //Migrations = synchronize: false
     entities: [entity],
+    migrations: [migration]
 });

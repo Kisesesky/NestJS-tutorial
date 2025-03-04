@@ -4,7 +4,7 @@ import { ResponseUserDto } from '../../modules/users/dto/response-user.dto';
 import { SignUpDto } from './dto/sign-up.dto';
 import { UsersService } from '../../modules/users/users.service';
 import { LogInDto } from './dto/log-in.dto';
-import { comparePassword, encryptPassword } from 'src/utils/password-util';
+import { comparePassword, encryptPassword } from '../../utils/password-util';
 import { JwtService } from '@nestjs/jwt';
 import { CookieOptions } from 'csurf';
 

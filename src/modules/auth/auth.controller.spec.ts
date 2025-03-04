@@ -22,7 +22,7 @@ describe('AuthController (e2e)', () => {
   it('/api/v1/auth/login (POST) - should return an access token', () => {
     return request(app.getHttpServer())
       .post('/auth/login')
-      .send({ email: 'dongwon1104@naver.com', password: '123123' })
+      .send({ email: 'kisesesky19@gmail.com', password: '123123' })
       .expect(201)
       .expect((res) => {
         expect(res.body).toHaveProperty('refreshToken');
