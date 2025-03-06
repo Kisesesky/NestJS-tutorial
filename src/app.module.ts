@@ -8,6 +8,8 @@ import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { PostsModule } from './modules/posts/posts.module';
 import { WinstonLoggerModule } from './modules/logger/winston-loggers.module';
+import { RolesGuard } from './modules/auth/role.guard';
+import { APP_GUARD } from '@nestjs/core';
 
 
 
@@ -24,6 +26,9 @@ import { WinstonLoggerModule } from './modules/logger/winston-loggers.module';
     WinstonLoggerModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, {
+    provide: APP_GUARD,
+    useClass: RolesGuard,
+  }],
 })
 export class AppModule {}

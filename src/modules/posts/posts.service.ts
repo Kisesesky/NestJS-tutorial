@@ -6,7 +6,7 @@ import { UpdatePostDto } from './dto/update-post.dto';
 import { Post } from './entities/post.entity';
 import { ListAllPostDto } from './dto/list-all-post.dto';
 import { ResponseListAllPostDto } from './dto/response-list-all-post.dto';
-import { paginate, Pagination } from 'nestjs-typeorm-paginate';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @Injectable()
 export class PostsService {
@@ -19,7 +19,7 @@ export class PostsService {
     return await this.postRepository.save(post)
   }
 
-  async findAllPosts(options: ListAllPostDto): Promise<Pagination<Post>> {
+  async findAllPosts(options: ListAllPostDto) {
     // const { page, limit } = listAllpostDto
     // const [ data, total ] = await this.postRepository.findAndCount({
     //   relations: ['user'],
@@ -51,16 +51,17 @@ export class PostsService {
     if(options.user)
       query.andWhere('p.userId = :user', { user: options.user })
 
-    return paginate<Post>(query, options);
+    const [ data, total ] = await query.getManyAndCount()
 
-    // return {
-    //   data,
-    //   total,
-    //   page,
-    //   limit,
-    //   totalPages: Math.ceil( total / limit )
-    // }
+    return {
+      data,
+      total,
+      page: options.page,
+      limit: options.limit,
+      totalPages: Math.ceil( total / options.limit )
+    }
   }
+
 
   findOne(id: number) {
     return `This action returns a #${id} post`;
